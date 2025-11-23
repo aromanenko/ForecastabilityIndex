@@ -1,2 +1,2 @@
 # ForecastabilityIndex
-Building forecastability Index Assers
+Building forecastability Index Assets
