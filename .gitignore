@@ -1,0 +1,7 @@
+.venv/
+__pycache__/
+.ipynb_checkpoints/
+.jupyter/
+.cache/
+outputs/
+intermittency_flags_all.csv
