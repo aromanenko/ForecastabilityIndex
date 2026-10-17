@@ -1,6 +1,7 @@
 """Execute notebooks in fresh kernels using this Python environment."""
 
 import argparse
+import base64
 import os
 from pathlib import Path
 import sys
@@ -61,9 +62,23 @@ def execute(path, timeout=600):
         raise RuntimeError(f'{path.name}: some code cells were not executed')
     if any(o.output_type == 'error' for c in code_cells for o in c.outputs):
         raise RuntimeError(f'{path.name}: error output found')
+    plotly_charts = [
+        output
+        for cell in code_cells
+        for output in cell.outputs
+        if 'application/vnd.plotly.v1+json' in output.get('data', {})
+    ]
+    for chart in plotly_charts:
+        preview = chart['data'].get('image/png', '')
+        if not base64.b64decode(preview).startswith(b'\x89PNG\r\n\x1a\n'):
+            raise RuntimeError(f'{path.name}: a Plotly chart has no valid PNG preview for GitHub')
     nbformat.validate(notebook)
     nbformat.write(notebook, path)
-    print(f'PASS {path.name}: {len(code_cells)} code cells, {time.monotonic() - started:.1f}s', flush=True)
+    print(
+        f'PASS {path.name}: {len(code_cells)} code cells, '
+        f'{len(plotly_charts)} Plotly charts with PNG previews, {time.monotonic() - started:.1f}s',
+        flush=True,
+    )
 
 
 def main():
